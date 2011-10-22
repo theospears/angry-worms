@@ -6,6 +6,7 @@ $(function(){
 	var BACKGROUND_PATH = [ 'images/background.png' ]
 	var BIRD_IMAGE_PATHS = [ 'images/bird-yellow.png', 'images/bird-blue.png' ];
 	var MAX_THROW_SPEED = 20;
+	var TARGET_SIZE = 15;
 
 	var canvasRenderer=function(canvas, world) {
 		var drawingContext = canvas.getContext('2d');
@@ -35,11 +36,31 @@ $(function(){
 						case 'bird':
 							var image = birdImages[obj.player];
 							drawingContext.drawImage(image, obj.position.x - image.width / 2, obj.position.y - image.height / 2);
+
+							if(obj.target) {
+								// Target circle
+								console.log(obj.target);
+								drawingContext.strokeStyle = 'red';
+								drawingContext.beginPath();
+								drawingContext.arc(obj.target.x, obj.target.y, TARGET_SIZE, 0, Math.PI*2);
+								drawingContext.stroke();
+								drawingContext.closePath();
+								
+								// line to it
+								console.log(obj.target);
+								drawingContext.strokeStyle = 'red';
+								drawingContext.beginPath();
+								drawingContext.moveTo(obj.target.x, obj.target.y)
+								drawingContext.lineTo(obj.position.x, obj.position.y);
+								drawingContext.stroke();
+								drawingContext.closePath();
+							}
+
 							break;
 
 						case 'brick':
 							if(RENDER_DEBUG) {
-								drawingContext.fillStyle = 'green'
+								drawingContext.fillStyle = 'green';
 								drawingContext.fillRect(obj.position.x,obj.position.y,obj.size.width,obj.size.height);
 							}
 							break;
@@ -147,6 +168,8 @@ $(function(){
 					obj.velocity.x = 0;
 					obj.velocity.y = 0;
 
+					obj.target = mouseDownPosition;
+
 					obj.pinned = true;
 					grabbedObject = obj;
 					grabPosition = mouseDownPosition;
@@ -158,7 +181,7 @@ $(function(){
 		$canvas.mouseup(function(ev) {
 			var mouseUpPosition = {x:ev.offsetX, y:ev.offsetY};
 			
-			if(grabbedObject != null) {
+			if(grabbedObject) {
 				console.log('Dropped the bird');
 
 				var newVelocity = { x: grabPosition.x - mouseUpPosition.x, y: grabPosition.y - mouseUpPosition.y };
@@ -172,7 +195,16 @@ $(function(){
 				grabbedObject.velocity = newVelocity;
 
 				grabbedObject.pinned = false;
+				delete grabbedObject.target;
 				grabbedObject = null;
+			}
+		});
+
+		$canvas.mousemove(function(ev) {
+			var mousePosition = {x:ev.offsetX, y:ev.offsetY};
+			
+			if(grabbedObject) {
+				grabbedObject.position = mousePosition;
 			}
 		});
 

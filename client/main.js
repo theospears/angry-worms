@@ -1,5 +1,5 @@
 $(function(){
-	var TICK_INTERVAL = 1000; // ms
+	var TICK_INTERVAL = 200; // ms
 	var GRAVITY_STRENGTH = 1;
 
 	var canvasRenderer=function() {

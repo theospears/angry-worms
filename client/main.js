@@ -1,26 +1,31 @@
 $(function(){
+	var RENDER_DEBUG = false
+
 	var TICK_INTERVAL = 50; // ms
 	var GRAVITY_STRENGTH = 0.1;
+	var BACKGROUND_PATH = [ 'images/background.png' ]
+	var BIRD_IMAGE_PATHS = [ 'images/bird-yellow.png', 'images/bird-blue.png' ];
 
 	var canvasRenderer=function() {
 		var canvas = document.getElementById('gameworld');
 		var drawingContext = canvas.getContext('2d');
 
-		var birdFiles = [ 'images/bird-yellow.png', 'images/bird-blue.png' ];
 		var birdImages = [];
 
-		for(var i = 0; i < birdFiles.length; i++) {
+		for(var i = 0; i < BIRD_IMAGE_PATHS.length; i++) {
 			var img = new Image();
-			img.src = birdFiles[i];
+			img.src = BIRD_IMAGE_PATHS[i];
 			birdImages.push(img);
 		}
+
+		var background = new Image();
+		background.src = BACKGROUND_PATH;
 
 		console.log(birdImages);
 
 		return {
 			'draw' : function(world) {
-				drawingContext.fillStyle = 'wheat';
-				drawingContext.fillRect(0,0,world.size.width, world.size.height);
+				drawingContext.drawImage(background, 0, 0);
 
 				for(var i = 0; i < world.contents.length; i++) {
 					var obj = world.contents[i];
@@ -33,8 +38,10 @@ $(function(){
 							break;
 
 						case 'brick':
-							drawingContext.fillStyle = 'green'
-							drawingContext.fillRect(obj.position.x,obj.position.y,obj.size.width,obj.size.height);
+							if(RENDER_DEBUG) {
+								drawingContext.fillStyle = 'green'
+								drawingContext.fillRect(obj.position.x,obj.position.y,obj.size.width,obj.size.height);
+							}
 							break;
 
 						default:
@@ -110,8 +117,8 @@ $(function(){
 				'player' : 1
 			},
 			{
-				'position' : { 'x': 10, 'y': 75 },
-				'size' : { 'width': 580, 'height': 10 },
+				'position' : { 'x': 0, 'y': 570 },
+				'size' : { 'width': 800, 'height': 30 },
 				'style': 'brick',
 				'pinned' : true
 			}

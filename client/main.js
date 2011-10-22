@@ -1,5 +1,6 @@
 $(function(){
 	var TICK_INTERVAL = 1000; // ms
+	var GRAVITY_STRENGTH = 1;
 
 	var canvasRenderer=function() {
 		var canvas = document.getElementById('gameworld');
@@ -68,6 +69,10 @@ $(function(){
 					var obj = newWorld.contents[i];
 					if(!obj.pinned) 
 					{
+						// movement
+						obj.velocity.y += GRAVITY_STRENGTH;
+
+						// gravity
 						obj.position.x += obj.velocity.x;
 						obj.position.y += obj.velocity.y;
 					}
@@ -86,7 +91,7 @@ $(function(){
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
 				'pinned' : false,
-				'velocity' : { x: 5, y: 10 }
+				'velocity' : { x: 5, y: 0 }
 			},
 			{
 				'position' : { 'x': 10, 'y': 75 },

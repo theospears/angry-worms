@@ -48,7 +48,6 @@ $(function(){
 								drawingContext.closePath();
 								
 								// line to it
-								console.log(obj.target);
 								drawingContext.strokeStyle = 'red';
 								drawingContext.beginPath();
 								drawingContext.moveTo(obj.target.x, obj.target.y)

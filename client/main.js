@@ -91,8 +91,6 @@ $(function(){
 
 	var physicsEngine = function(world) {
 		normalize = function(displacement) {
-			console.log(displacement);
-			console.log(mag);
 			var mag = getMagnitude(displacement);
 			return { x: displacement.x / mag, y: displacement.y / mag };
 			
@@ -152,14 +150,12 @@ $(function(){
 						var collisionCandidate = world.contents[cc];
 
 						var colInfo = getCollisionInformation(obj, collisionCandidate);
-						if(colInfo && !before) {
-							before = true;
+						if(colInfo) {
 							
 							console.log("Hit!");
+							
 							if(!obj.pinned && !collisionCandidate.pinned) {
-								console.log(obj.velocity);
-								console.log(collisionCandidate.velocity);
-								console.log(colInfo.normal);
+									console.log(obj.player)
 								var impulse = dotProduct(obj.velocity, colInfo.normal) - dotProduct(collisionCandidate.velocity, colInfo.normal);
 								console.log(impulse);
 								obj.velocity = { x: obj.velocity.x - colInfo.normal.x * impulse, y: obj.velocity.y - colInfo.normal.y * impulse };
@@ -169,10 +165,10 @@ $(function(){
 							}
 
 
-							if(! obj.pinned) {
+							else if(! obj.pinned) {
 								obj.velocity.y = - obj.velocity.y;
 							}
-							if(! collisionCandidate.pinned) {
+							else if(! collisionCandidate.pinned) {
 								collisionCandidate.velocity.y = - collisionCandidate.velocity.y;
 							}
 						}
@@ -276,7 +272,7 @@ $(function(){
 		"size" : { "width" : 800, "height" : 600 },
 		"contents" : [
 			{
-				'position' : { 'x': 50, 'y': 50 },
+				'position' : { 'x': 50, 'y': 20 },
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
 				'pinned' : false,

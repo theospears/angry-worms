@@ -1,4 +1,5 @@
 $(function(){
+	var TICK_INTERVAL = 1000; // ms
 
 	var canvasRenderer=function() {
 		var canvas = document.getElementById('gameworld');
@@ -6,6 +7,9 @@ $(function(){
 
 		return {
 			'draw' : function(world) {
+				drawingContext.fillStyle = 'wheat';
+				drawingContext.fillRect(0,0,world.size.width, world.size.height);
+
 				for(var i = 0; i < world.contents.length; i++) {
 					var obj = world.contents[i];
 
@@ -33,6 +37,23 @@ $(function(){
 		}
 	}
 
+	var physicsEngine = function() {
+		return {
+			'tick' : function(world) {
+				var newContents = [];
+				for(var i = 0; i < world.contents.length; i++) {
+					var obj = world.contents[i];
+					newContents.push(obj);
+				}
+
+				return {
+					'size' : world.size,
+					'contents' : newContents
+				}
+			}
+		};
+	}
+
 	var world = {
 		"size" : { "width" : 500, "height" : 500 },
 		"contents" : [
@@ -51,6 +72,13 @@ $(function(){
 		]
 	}
 
-	renderer = canvasRenderer();
-	renderer.draw(world);
+	var renderer = canvasRenderer();
+	var engine = new physicsEngine();
+
+	setInterval(function() {
+		world = engine.tick(world);
+		renderer.draw(world);
+	}, TICK_INTERVAL);
+
+
 });

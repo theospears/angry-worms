@@ -8,8 +8,13 @@ $(function(){
 	var MAX_THROW_SPEED = 20;
 	var OFFSET_MULTIPLE = 3;
 	var TARGET_SIZE = 15;
+	var before = false;
 
 	var MAX_HEALTH = 100;
+
+	var getMagnitude = function(displacement) {
+		return Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
+	}
 
 	var canvasRenderer=function(canvas, world) {
 		var drawingContext = canvas.getContext('2d');
@@ -85,13 +90,26 @@ $(function(){
 	}
 
 	var physicsEngine = function(world) {
+		normalize = function(displacement) {
+			console.log(displacement);
+			console.log(mag);
+			var mag = getMagnitude(displacement);
+			return { x: displacement.x / mag, y: displacement.y / mag };
+			
+		}
+
+		dotProduct = function(a, b) {
+			return a.x * b.x + a.y * b.y; 
+		}
 
 		var collisionAlgorithms = {
 			'bird/bird' : function(bird1, bird2) {
 				var displacement = { x : bird1.position.x - bird2.position.x, y : bird1.position.y - bird2.position.y };
 				distance = Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
 				if(distance < bird1.size.radius + bird2.size.radius) {
-					return { normal:  Math.atan(displacement.y / displacement.x) };
+					console.log('la');
+					console.log(displacement);
+					return { normal:  normalize(displacement) };
 				} else {
 					return false;
 				}
@@ -134,8 +152,23 @@ $(function(){
 						var collisionCandidate = world.contents[cc];
 
 						var colInfo = getCollisionInformation(obj, collisionCandidate);
-						if(colInfo) {
+						if(colInfo && !before) {
+							before = true;
+							
 							console.log("Hit!");
+							if(!obj.pinned && !collisionCandidate.pinned) {
+								console.log(obj.velocity);
+								console.log(collisionCandidate.velocity);
+								console.log(colInfo.normal);
+								var impulse = dotProduct(obj.velocity, colInfo.normal) - dotProduct(collisionCandidate.velocity, colInfo.normal);
+								console.log(impulse);
+								obj.velocity = { x: obj.velocity.x - colInfo.normal.x * impulse, y: obj.velocity.y - colInfo.normal.y * impulse };
+								collisionCandidate.velocity = { x: collisionCandidate.velocity.x + colInfo.normal.x * impulse, y: collisionCandidate.velocity.y + colInfo.normal.y * impulse };
+								console.log(obj.velocity);
+								console.log(collisionCandidate.velocity);
+							}
+
+
 							if(! obj.pinned) {
 								obj.velocity.y = - obj.velocity.y;
 							}
@@ -155,9 +188,6 @@ $(function(){
 		var grabbedObject = null;
 		var grabPosition;
 
-		var getMagnitude = function(displacement) {
-			return Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
-		}
 
 		var getDistance = function(point1, point2) {
 			var displacement = { x : point1.x - point2.x, y : point1.y - point2.y };
@@ -250,7 +280,7 @@ $(function(){
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
 				'pinned' : false,
-				'velocity' : { x: 1, y: 0 },
+				'velocity' : { x: 3, y: 0 },
 				'health' : MAX_HEALTH,
 				'player' : 0
 			},
@@ -259,7 +289,7 @@ $(function(){
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
 				'pinned' : false,
-				'velocity' : { x: -3, y: 0 },
+				'velocity' : { x: -5, y: 0 },
 				'health' : MAX_HEALTH,
 				'player' : 1
 			},

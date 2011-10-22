@@ -9,6 +9,8 @@ $(function(){
 	var OFFSET_MULTIPLE = 3;
 	var TARGET_SIZE = 15;
 
+	var MAX_HEALTH = 100;
+
 	var canvasRenderer=function(canvas, world) {
 		var drawingContext = canvas.getContext('2d');
 
@@ -35,8 +37,17 @@ $(function(){
 					switch(obj.style)
 					{
 						case 'bird':
+							// Draw the bird
 							var image = birdImages[obj.player];
-							drawingContext.drawImage(image, obj.position.x - image.width / 2, obj.position.y - image.height / 2);
+							var birdLeft = obj.position.x - image.width / 2;
+							var birdTop = obj.position.y - image.height / 2;
+							drawingContext.drawImage(image, birdLeft, birdTop);
+
+							// Draw the health bar
+							drawingContext.strokeStyle = 'green';
+							drawingContext.fillStyle = 'green';
+							drawingContext.strokeRect(birdLeft, birdTop + image.height, image.width, 5);
+							drawingContext.fillRect(birdLeft, birdTop + image.height, image.width * obj.health / MAX_HEALTH, 5);
 
 							if(obj.target) {
 								// Target circle
@@ -240,6 +251,7 @@ $(function(){
 				'style': 'bird',
 				'pinned' : false,
 				'velocity' : { x: 1, y: 0 },
+				'health' : MAX_HEALTH,
 				'player' : 0
 			},
 			{
@@ -248,6 +260,7 @@ $(function(){
 				'style': 'bird',
 				'pinned' : false,
 				'velocity' : { x: -3, y: 0 },
+				'health' : MAX_HEALTH,
 				'player' : 1
 			},
 			{

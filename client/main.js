@@ -1,10 +1,21 @@
 $(function(){
-	var TICK_INTERVAL = 200; // ms
-	var GRAVITY_STRENGTH = 1;
+	var TICK_INTERVAL = 50; // ms
+	var GRAVITY_STRENGTH = 0.1;
 
 	var canvasRenderer=function() {
 		var canvas = document.getElementById('gameworld');
 		var drawingContext = canvas.getContext('2d');
+
+		var birdFiles = [ 'images/bird-yellow.png', 'images/bird-blue.png' ];
+		var birdImages = [];
+
+		for(var i = 0; i < birdFiles.length; i++) {
+			var img = new Image();
+			img.src = birdFiles[i];
+			birdImages.push(img);
+		}
+
+		console.log(birdImages);
 
 		return {
 			'draw' : function(world) {
@@ -17,12 +28,8 @@ $(function(){
 					switch(obj.style)
 					{
 						case 'bird':
-							drawingContext.fillStyle = 'red';
-
-							drawingContext.beginPath();
-							drawingContext.arc(obj.position.x, obj.position.y, obj.size.radius, 0, 2*Math.PI);
-							drawingContext.fill();
-							drawingContext.closePath();
+							var image = birdImages[obj.player];
+							drawingContext.drawImage(image, obj.position.x - image.width / 2, obj.position.y - image.height / 2);
 							break;
 
 						case 'brick':
@@ -84,18 +91,27 @@ $(function(){
 	}
 
 	var world = {
-		"size" : { "width" : 500, "height" : 500 },
+		"size" : { "width" : 800, "height" : 600 },
 		"contents" : [
 			{
 				'position' : { 'x': 50, 'y': 50 },
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
 				'pinned' : false,
-				'velocity' : { x: 5, y: 0 }
+				'velocity' : { x: 1, y: 0 },
+				'player' : 0
+			},
+			{
+				'position' : { 'x': 450, 'y': 20 },
+				'size' : { 'radius' : 25 },
+				'style': 'bird',
+				'pinned' : false,
+				'velocity' : { x: -1, y: 0 },
+				'player' : 1
 			},
 			{
 				'position' : { 'x': 10, 'y': 75 },
-				'size' : { 'width': 300, 'height': 10 },
+				'size' : { 'width': 580, 'height': 10 },
 				'style': 'brick',
 				'pinned' : true
 			}

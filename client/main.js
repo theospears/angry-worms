@@ -2,12 +2,12 @@ $(function(){
 	var RENDER_DEBUG = false
 
 	var TICK_INTERVAL = 50; // ms
-	var GRAVITY_STRENGTH = 0.1;
+	var GRAVITY_STRENGTH = 0.005 * TICK_INTERVAL;
 	var BACKGROUND_PATH = [ 'images/background.png' ]
 	var BIRD_IMAGE_PATHS = [ 'images/bird-yellow.png', 'images/bird-blue.png' ];
+	var MAX_THROW_SPEED = 20;
 
-	var canvasRenderer=function() {
-		var canvas = document.getElementById('gameworld');
+	var canvasRenderer=function(canvas, world) {
 		var drawingContext = canvas.getContext('2d');
 
 		var birdImages = [];
@@ -24,7 +24,7 @@ $(function(){
 		console.log(birdImages);
 
 		return {
-			'draw' : function(world) {
+			'draw' : function() {
 				drawingContext.drawImage(background, 0, 0);
 
 				for(var i = 0; i < world.contents.length; i++) {
@@ -52,49 +52,135 @@ $(function(){
 		}
 	}
 
-	var physicsEngine = function() {
-		var deepClone = function(obj) {
-			if(obj instanceof Array) {
-				var newObj = [];
-				newObj.__proto__ = obj.__proto__;
-				for(var i = 0; i < obj.length; i++) {
-					newObj[i] = deepClone(obj[i]);
+	var physicsEngine = function(world) {
+
+		var collisionAlgorithms = {
+			'bird/bird' : function(bird1, bird2) {
+				var displacement = { x : bird1.x - bird2.x, y : bird1.y - bird2.y };
+				distance = Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
+				if(distance < bird1.size.radius + bird2.size.radius) {
+					return { normal:  Math.atan(displacement.y / displacement.x) };
+				} else {
+					return false;
 				}
-				return newObj;
-			} else if(obj instanceof Object) {
-				var newObj = {}
-				newObj.__proto__ = obj.__proto__;
-				for(var v in obj) {
-					if(obj.hasOwnProperty(v)) {
-						newObj[v] = deepClone(obj[v]);
-					}
+			},
+			'bird/brick' : function(bird, brick) {
+				var hit = Math.abs(bird.position.y - brick.position.y) < 35;
+				if(hit) {
+					return { normal: Math.PI / 2 };
+				} else {
+					return false;
 				}
-				return newObj;
-			} else {
-				return obj; // primative
-			}
-			return obj;
+		 	}
+		}
+
+		var getCollisionInformation = function(object1, object2) {
+			var formerObject = object1.style < object2.style ? object1 : object2;
+			var latterObject = object1.style < object2.style ? object2 : object1;
+
+			var collisionFunc = collisionAlgorithms[formerObject.style + '/' + latterObject.style];
+			return collisionFunc(formerObject, latterObject);
 		}
 
 		return {
-			'tick' : function(world) {
-				var newWorld = deepClone(world);
-				for(var i = 0; i < newWorld.contents.length; i++) {
-					var obj = newWorld.contents[i];
+			'tick' : function() {
+				for(var i = 0; i < world.contents.length; i++) {
+					var obj = world.contents[i];
 					if(!obj.pinned) 
 					{
-						// movement
+						// gravity
 						obj.velocity.y += GRAVITY_STRENGTH;
 
-						// gravity
+						// movement
 						obj.position.x += obj.velocity.x;
 						obj.position.y += obj.velocity.y;
+
+					}
+
+					// Collision detection
+					for(var cc = 0; cc < i; cc++) {
+						var collisionCandidate = world.contents[cc];
+
+						var colInfo = getCollisionInformation(obj, collisionCandidate);
+						if(colInfo) {
+							console.log("Hit!");
+							if(! obj.pinned) {
+								obj.velocity.y = - obj.velocity.y;
+							}
+							if(! collisionCandidate.pinned) {
+								collisionCandidate.velocity.y = - collisionCandidate.velocity.y;
+							}
+						}
 					}
 				}
-
-				return newWorld;
 			}
 		};
+	}
+
+	var inputHandler = function(canvas,world) {
+		var world;
+		var $canvas = $(canvas);
+		var grabbedObject = null;
+		var grabPosition;
+
+		var getMagnitude = function(displacement) {
+			return Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
+		}
+
+		var getDistance = function(point1, point2) {
+			var displacement = { x : point1.x - point2.x, y : point1.y - point2.y };
+			return getMagnitude(displacement);
+		}
+
+
+
+		$canvas.mousedown(function(ev) {
+			console.log(ev.offsetX, ev.offsetY);
+			window.it = ev;
+			
+			var mouseDownPosition = {x:ev.offsetX, y:ev.offsetY};
+			// Check if the player clicked on one of the birds
+			for(var i = 0; i < world.contents.length; i++) {
+				var obj = world.contents[i];
+				if(obj.style == 'bird' && getDistance(obj.position, {x:ev.offsetX, y:ev.offsetY}) < obj.size.radius) {
+					console.log('Grabbed the bird');
+					obj.velocity.x = 0;
+					obj.velocity.y = 0;
+
+					obj.pinned = true;
+					grabbedObject = obj;
+					grabPosition = mouseDownPosition;
+				}
+			}
+			return true;
+		});
+
+		$canvas.mouseup(function(ev) {
+			var mouseUpPosition = {x:ev.offsetX, y:ev.offsetY};
+			
+			if(grabbedObject != null) {
+				console.log('Dropped the bird');
+
+				var newVelocity = { x: grabPosition.x - mouseUpPosition.x, y: grabPosition.y - mouseUpPosition.y };
+				speed = getMagnitude(newVelocity);
+
+				if(speed > MAX_THROW_SPEED) {
+					newVelocity.x = newVelocity.x * MAX_THROW_SPEED / speed;
+					newVelocity.y = newVelocity.y * MAX_THROW_SPEED / speed;
+				}
+
+				grabbedObject.velocity = newVelocity;
+
+				grabbedObject.pinned = false;
+				grabbedObject = null;
+			}
+		});
+
+		return { 
+			'world' : function(newWorld) {
+				world = newWorld;
+			}
+		}
 	}
 
 	var world = {
@@ -113,7 +199,7 @@ $(function(){
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
 				'pinned' : false,
-				'velocity' : { x: -1, y: 0 },
+				'velocity' : { x: -3, y: 0 },
 				'player' : 1
 			},
 			{
@@ -125,12 +211,15 @@ $(function(){
 		]
 	}
 
-	var renderer = canvasRenderer();
-	var engine = new physicsEngine();
+	var canvas = document.getElementById('gameworld');
+
+	var renderer = canvasRenderer(canvas,world );
+	var engine = new physicsEngine(world);
+	var input = new inputHandler(canvas, world);
 
 	setInterval(function() {
-		world = engine.tick(world);
-		renderer.draw(world);
+		world = engine.tick();
+		renderer.draw();
 	}, TICK_INTERVAL);
 
 

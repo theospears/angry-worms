@@ -77,7 +77,7 @@ $(function(){
 
 		var collisionAlgorithms = {
 			'bird/bird' : function(bird1, bird2) {
-				var displacement = { x : bird1.x - bird2.x, y : bird1.y - bird2.y };
+				var displacement = { x : bird1.position.x - bird2.position.x, y : bird1.position.y - bird2.position.y };
 				distance = Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
 				if(distance < bird1.size.radius + bird2.size.radius) {
 					return { normal:  Math.atan(displacement.y / displacement.x) };

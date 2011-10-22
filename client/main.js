@@ -38,18 +38,42 @@ $(function(){
 	}
 
 	var physicsEngine = function() {
+		var deepClone = function(obj) {
+			if(obj instanceof Array) {
+				var newObj = [];
+				newObj.__proto__ = obj.__proto__;
+				for(var i = 0; i < obj.length; i++) {
+					newObj[i] = deepClone(obj[i]);
+				}
+				return newObj;
+			} else if(obj instanceof Object) {
+				var newObj = {}
+				newObj.__proto__ = obj.__proto__;
+				for(var v in obj) {
+					if(obj.hasOwnProperty(v)) {
+						newObj[v] = deepClone(obj[v]);
+					}
+				}
+				return newObj;
+			} else {
+				return obj; // primative
+			}
+			return obj;
+		}
+
 		return {
 			'tick' : function(world) {
-				var newContents = [];
-				for(var i = 0; i < world.contents.length; i++) {
-					var obj = world.contents[i];
-					newContents.push(obj);
+				var newWorld = deepClone(world);
+				for(var i = 0; i < newWorld.contents.length; i++) {
+					var obj = newWorld.contents[i];
+					if(!obj.pinned) 
+					{
+						obj.position.x += obj.velocity.x;
+						obj.position.y += obj.velocity.y;
+					}
 				}
 
-				return {
-					'size' : world.size,
-					'contents' : newContents
-				}
+				return newWorld;
 			}
 		};
 	}
@@ -61,7 +85,8 @@ $(function(){
 				'position' : { 'x': 50, 'y': 50 },
 				'size' : { 'radius' : 25 },
 				'style': 'bird',
-				'pinned' : false
+				'pinned' : false,
+				'velocity' : { x: 5, y: 10 }
 			},
 			{
 				'position' : { 'x': 10, 'y': 75 },

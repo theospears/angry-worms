@@ -6,6 +6,7 @@ $(function(){
 	var BACKGROUND_PATH = [ 'images/background.png' ]
 	var BIRD_IMAGE_PATHS = [ 'images/bird-yellow.png', 'images/bird-blue.png' ];
 	var MAX_THROW_SPEED = 20;
+	var OFFSET_MULTIPLE = 3;
 	var TARGET_SIZE = 15;
 
 	var canvasRenderer=function(canvas, world) {
@@ -179,17 +180,22 @@ $(function(){
 		});
 
 		$canvas.mouseup(function(ev) {
-			var mouseUpPosition = {x:ev.offsetX, y:ev.offsetY};
+			var mousePosition = {x:ev.offsetX, y:ev.offsetY};
 			
 			if(grabbedObject) {
 				console.log('Dropped the bird');
 
-				var newVelocity = { x: grabPosition.x - mouseUpPosition.x, y: grabPosition.y - mouseUpPosition.y };
+				var newVelocity = {
+					x: (grabPosition.x - mousePosition.x) /  OFFSET_MULTIPLE,
+					y: (grabPosition.y - mousePosition.y) / OFFSET_MULTIPLE
+				};
 				speed = getMagnitude(newVelocity);
 
 				if(speed > MAX_THROW_SPEED) {
-					newVelocity.x = newVelocity.x * MAX_THROW_SPEED / speed;
-					newVelocity.y = newVelocity.y * MAX_THROW_SPEED / speed;
+					newVelocity = {
+						x: newVelocity.x * MAX_THROW_SPEED / speed,
+						y: newVelocity.y * MAX_THROW_SPEED / speed
+					};
 				}
 
 				grabbedObject.velocity = newVelocity;
@@ -204,7 +210,18 @@ $(function(){
 			var mousePosition = {x:ev.offsetX, y:ev.offsetY};
 			
 			if(grabbedObject) {
-				grabbedObject.position = mousePosition;
+
+				var offset = { x: grabPosition.x - mousePosition.x, y: grabPosition.y - mousePosition.y };
+				offsetMagnitude = getMagnitude(offset);
+
+				if(offsetMagnitude > MAX_THROW_SPEED * OFFSET_MULTIPLE) {
+					offset.x = offset.x * MAX_THROW_SPEED * OFFSET_MULTIPLE / offsetMagnitude;
+					offset.y = offset.y * MAX_THROW_SPEED * OFFSET_MULTIPLE / offsetMagnitude;
+
+				}
+				grabbedObject.position.x = grabPosition.x - offset.x;
+				grabbedObject.position.y = grabPosition.y - offset.y;
+
 			}
 		});
 
